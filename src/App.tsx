@@ -16,6 +16,7 @@ import VoucherDetailPage from "./pages/VoucherDetailPage";
 import CartPage from "./pages/CartPage";
 import ProtectedRoute from "./routes/protectedRoute";
 import CheckoutPage from "./pages/CheckoutPage";
+import PaymentCallbackPage from "./pages/PaymentCallbackPage";
 
 function App() {
   return (
@@ -37,6 +38,10 @@ function App() {
                     <Route
                       path="/product/:productSlug"
                       element={<ProductDetailPage />}
+                    />
+                    <Route
+                      path="/payment-callback"
+                      element={<PaymentCallbackPage />}
                     />
 
                     <Route element={<GuestRoute />}>
