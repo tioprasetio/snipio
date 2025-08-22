@@ -17,6 +17,10 @@ import CartPage from "./pages/CartPage";
 import ProtectedRoute from "./routes/protectedRoute";
 import CheckoutPage from "./pages/CheckoutPage";
 import PaymentCallbackPage from "./pages/PaymentCallbackPage";
+import ProfilePage from "./pages/ProfilePage";
+import MyOrderPage from "./pages/MyOrderPage";
+import MyOrderDetailPage from "./pages/MyOrderDetailPage";
+import EditProfile from "./pages/EditProfilePage";
 
 function App() {
   return (
@@ -33,7 +37,7 @@ function App() {
                       path="/category/:category"
                       element={<CategoryPage />}
                     />
-                    <Route path="/voucher" element={<VoucherPage />} />
+
                     <Route path="/cart" element={<CartPage />} />
                     <Route
                       path="/product/:productSlug"
@@ -50,14 +54,21 @@ function App() {
                     </Route>
 
                     <Route element={<ProtectedRoute />}>
+                      <Route path="/voucher" element={<VoucherPage />} />
                       <Route path="/checkout" element={<CheckoutPage />} />
+                      <Route path="/profile" element={<ProfilePage />} />
+                      <Route path="/edit-profile" element={<EditProfile />} />
+                      <Route path="/my-order" element={<MyOrderPage />} />
+                      <Route
+                        path="/my-order-detail/:order_id"
+                        element={<MyOrderDetailPage />}
+                      />
+                      {/* Dynamic Route */}
+                      <Route
+                        path="/voucher/:voucherSlug"
+                        element={<VoucherDetailPage />}
+                      />
                     </Route>
-
-                    {/* Dynamic Route */}
-                    <Route
-                      path="/voucher/:voucherSlug"
-                      element={<VoucherDetailPage />}
-                    />
                   </Routes>
                 </CheckoutProvider>
               </CartProvider>

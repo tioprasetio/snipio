@@ -30,7 +30,6 @@ const ProductInformationCheckout = () => {
               <div className="flex-1">
                 <p className="font-medium">{product.title}</p>
                 <p className="font-semibold">{formatRupiah(product.price)}</p>
-                <p>Jumlah: {product.quantity}</p>
               </div>
             </div>
           ))}

@@ -1,12 +1,13 @@
 // components/CardProduct.tsx
 import { useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import Btn from "./Btn";
 import type { Product } from "../types/Product";
 import { useWishlist } from "../hook/useWishlist";
 import { formatRupiah } from "../utils/formatCurrency";
+import useOrderHistory from "../hook/useOrderHistory";
 
 interface CardProductProps extends Product {
   isDarkMode: boolean;
@@ -35,6 +36,17 @@ const CardProduct = (props: CardProductProps) => {
   const displayRating = average_rating || 0;
 
   const productSlug = title?.toLowerCase().replace(/\s+/g, "-");
+
+  const { hasPurchased, fetchOrderHistory, loadingOrders } = useOrderHistory();
+
+  // Fetch order history ketika component mount dan user sudah login
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchOrderHistory();
+    }
+  }, [isLoggedIn]);
+
+  const isAlreadyPurchased = props ? hasPurchased(props.id) : false;
 
   const handleClick = () => {
     navigate(`/product/${id}-${productSlug}`, {
@@ -114,8 +126,32 @@ const CardProduct = (props: CardProductProps) => {
         height={800}
       />
 
-      <div className="flex items-center justify-center cursor-pointer absolute top-0 left-0 bg-[#456af8] text-[#FFFFFF] rounded-tl-lg rounded-br-lg md:text-sm text-xs font-bold p-2 transition">
-        BV
+      {/* Badge dengan loading state */}
+      <div
+        className={`flex items-center justify-center cursor-pointer absolute top-0 left-0 rounded-tl-lg rounded-br-lg md:text-sm text-xs font-bold p-2 transition ${
+          loadingOrders
+            ? "bg-gray-400 text-white"
+            : isAlreadyPurchased
+            ? "bg-green-500 text-white"
+            : "bg-[#456af8] text-white"
+        }`}
+      >
+        {loadingOrders ? (
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-xs">Cek...</span>
+          </div>
+        ) : isAlreadyPurchased ? (
+          <div className="flex items-center gap-1">
+            <i className="bx bx-check text-base"></i>
+            <span>Dimiliki</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1">
+            <i className="bx bx-x text-base"></i>
+            <span>Belum Dimiliki</span>
+          </div>
+        )}
       </div>
 
       <button

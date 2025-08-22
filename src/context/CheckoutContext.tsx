@@ -7,7 +7,6 @@ export interface ProductCheckout {
   product_id: number;
   title: string;
   price: number;
-  quantity: number;
   thumbnail: string;
 }
 

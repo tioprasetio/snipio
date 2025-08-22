@@ -22,6 +22,7 @@ import { useCheckout } from "../hook/useCheckout";
 import OriginalModal from "../components/OriginalModal";
 import useProductImages from "../context/ProductDetailContext";
 import { useProductTools } from "../hook/useTool";
+import useOrderHistory from "../hook/useOrderHistory";
 
 const ProductDetailPage = () => {
   const { addToCart } = useCart();
@@ -35,7 +36,6 @@ const ProductDetailPage = () => {
   const [showOriginalModal, setShowOriginalModal] = useState(false);
   const { tools, fetchProductTools } = useProductTools();
 
-  const [quantity, setQuantity] = useState(1); // State untuk kuantitas produk
   const [product, setProduct] = useState<Product | null>(null); // State untuk menyimpan produk yang dipilih
   const [wishlistLoading, setWishlistLoading] = useState(false);
 
@@ -50,6 +50,8 @@ const ProductDetailPage = () => {
     product
   );
 
+  const { fetchOrderHistory, hasPurchased, loadingOrders } = useOrderHistory();
+
   // Cari produk berdasarkan ID
   useEffect(() => {
     if (products.length > 0 && productId) {
@@ -57,6 +59,10 @@ const ProductDetailPage = () => {
       if (foundProduct) {
         setProduct(foundProduct);
         fetchProductTools(productId);
+
+        if (isLoggedIn) {
+          fetchOrderHistory();
+        }
       } else {
         Swal.fire({
           title: "Oops...",
@@ -119,18 +125,6 @@ const ProductDetailPage = () => {
     }
   };
 
-  // Fungsi untuk menambah kuantitas
-  const increaseQuantity = () => {
-    setQuantity((prevQuantity) => prevQuantity + 1);
-  };
-
-  // Fungsi untuk mengurangi kuantitas
-  const decreaseQuantity = () => {
-    if (quantity > 1) {
-      setQuantity((prevQuantity) => prevQuantity - 1);
-    }
-  };
-
   // Updated handleAddToCart function in ProductDetailPage.tsx
   const handleAddToCart = async () => {
     if (!isLoggedIn) {
@@ -144,8 +138,24 @@ const ProductDetailPage = () => {
     }
 
     if (product) {
+      if (hasPurchased(product.id)) {
+        Swal.fire({
+          title: "Produk Sudah Dimiliki",
+          text: "Anda sudah membeli produk ini sebelumnya. Konsep kami adalah sekali beli untuk selamanya.",
+          icon: "info",
+          confirmButtonText: "Lihat Pesanan Saya",
+          showCancelButton: true,
+          cancelButtonText: "Tutup",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            navigate("/my-order");
+          }
+        });
+        return;
+      }
+
       try {
-        await addToCart(product.id, quantity);
+        await addToCart(product.id);
 
         Swal.fire({
           title: "Berhasil!",
@@ -186,13 +196,14 @@ const ProductDetailPage = () => {
         title: product.title,
         thumbnail: product.thumbnail,
         price: product.price,
-        quantity: quantity,
       };
 
       setSelectedProducts([productToCheckout]);
       navigate("/checkout");
     }
   };
+
+  const isAlreadyPurchased = product ? hasPurchased(product.id) : false;
 
   // Tampilkan loading jika data sedang dimuat
   if (loading) {
@@ -384,7 +395,11 @@ const ProductDetailPage = () => {
                 )}
 
                 <div className="flex z-10 items-center justify-center cursor-pointer absolute top-0 left-0 bg-[#456af8] text-[#FFFFFF] rounded-tl-lg rounded-br-lg md:text-base text-sm font-bold p-2 transition">
-                  BV
+                  {isAlreadyPurchased ? (
+                    <p>Sudah Dimiliki</p>
+                  ) : (
+                    <p>Belum Dimiliki</p>
+                  )}
                 </div>
               </section>
 
@@ -453,17 +468,44 @@ const ProductDetailPage = () => {
                     isDarkMode ? "bg-[#303030]" : "bg-[#ffffff]"
                   } fixed gap-6 bottom-0 left-0 w-full p-4 shadow-2xl flex justify-between items-center z-50`}
                 >
-                  <Btn
-                    className="flex-1"
-                    variant="outline"
-                    onClick={handleAddToCart}
-                  >
-                    <i className="bx bx-cart-add text-lg"></i> Keranjang
-                  </Btn>
-                  <Btn className="flex-1" onClick={handleBuyNow}>
-                    Beli Sekarang
-                    <i className="bx bx-right-arrow-alt text-lg"></i>
-                  </Btn>
+                  {isAlreadyPurchased ? (
+                    <Btn
+                      className="flex-1"
+                      variant="outline"
+                      onClick={() => navigate("/my-order")}
+                    >
+                      <i className="bx bx-check-circle text-lg text-green-500"></i>{" "}
+                      Lihat Pesanan
+                    </Btn>
+                  ) : (
+                    <Btn
+                      className="flex-1"
+                      variant="outline"
+                      onClick={handleAddToCart}
+                      disabled={loadingOrders}
+                    >
+                      <i className="bx bx-cart-add text-lg"></i>
+                      {loadingOrders ? "Memuat..." : "Keranjang"}
+                    </Btn>
+                  )}
+                  {isAlreadyPurchased ? (
+                    <Btn
+                      className="flex-1 opacity-50 cursor-not-allowed"
+                      disabled
+                    >
+                      Sudah Dimiliki
+                      <i className="bx bx-check text-lg"></i>
+                    </Btn>
+                  ) : (
+                    <Btn
+                      className="flex-1"
+                      onClick={handleBuyNow}
+                      disabled={loadingOrders}
+                    >
+                      {loadingOrders ? "Memuat..." : "Beli Sekarang"}
+                      <i className="bx bx-right-arrow-alt text-lg"></i>
+                    </Btn>
+                  )}
                 </div>
               </div>
             </div>
@@ -483,6 +525,21 @@ const ProductDetailPage = () => {
                   >
                     {product.title}
                   </h1>
+
+                  {isAlreadyPurchased && (
+                    <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center text-green-700">
+                        <i className="bx bx-check-circle text-lg mr-2"></i>
+                        <span className="font-medium">
+                          Produk sudah Anda miliki
+                        </span>
+                      </div>
+                      <p className="text-sm text-green-600 mt-1">
+                        Konsep kami adalah sekali beli untuk selamanya
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex flex-row items-center">
                     <span className="text-[#959595] text-lg">
                       <i className="bx bxs-star text-lg text-[#FFD52DFF]"></i>
@@ -510,50 +567,18 @@ const ProductDetailPage = () => {
                       &nbsp;/ pcs
                     </span>
                   </div>
-                  <h1 className="text-[#959595] text-lg">
-                    Stok barang {product.terjual}
-                  </h1>
 
-                  <div className="flex items-center justify-between pt-4">
-                    <h3
-                      className={`${
-                        isDarkMode ? "text-[#F0F0F0]" : "text-[#353535]"
-                      } text-lg font-semibold `}
-                    >
-                      Kuantitas
-                    </h3>
-                    <div className="flex items-center gap-4">
-                      <button
-                        type="button"
-                        onClick={decreaseQuantity}
-                        className={`focus:outline-none cursor-pointer text-gray-400 ${
-                          quantity === 1 ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                        disabled={quantity === 1}
-                      >
-                        <i className="bx bx-minus-circle text-2xl"></i>
-                      </button>
-                      <input
-                        type="text"
+                  {!isAlreadyPurchased && (
+                    <div className="flex items-center justify-between pt-4">
+                      <h3
                         className={`${
-                          isDarkMode
-                            ? "text-[#F0F0F0] bg-[#303030]"
-                            : "text-[#353535] bg-[#ffffff]"
-                        } text-base font-semibold text-center focus:outline-none w-14 border-none`}
-                        name="quantity"
-                        id="quantity"
-                        value={quantity}
-                        readOnly
-                      />
-                      <button
-                        type="button"
-                        onClick={increaseQuantity}
-                        className="focus:outline-none cursor-pointer"
+                          isDarkMode ? "text-[#F0F0F0]" : "text-[#353535]"
+                        } text-lg font-semibold `}
                       >
-                        <i className="bx bx-plus-circle text-2xl text-gray-400"></i>
-                      </button>
+                        Kuantitas
+                      </h3>
                     </div>
-                  </div>
+                  )}
 
                   <hr className="mt-4 border-t border-gray-300" />
                   <h3
@@ -589,10 +614,10 @@ const ProductDetailPage = () => {
                         <div className="flex flex-col gap-1">
                           <span>{product.title}</span>
                           <span className="font-semibold">
-                            {formatRupiah(product.price * quantity)}
+                            {formatRupiah(product.price)}
                           </span>
                         </div>
-                        <div className="text-xxs pl-2">x{quantity}</div>
+                        <div className="text-xxs pl-2">x1</div>
                       </div>
                     </div>
                   </div>
@@ -687,17 +712,44 @@ const ProductDetailPage = () => {
                       isDarkMode ? "bg-[#303030]" : "bg-[#ffffff]"
                     } fixed gap-6 bottom-0 left-0 w-full p-4 shadow-2xl flex justify-between items-center z-50`}
                   >
-                    <Btn
-                      className="flex-1"
-                      variant="outline"
-                      onClick={handleAddToCart}
-                    >
-                      <i className="bx bx-cart-add text-lg"></i> Keranjang
-                    </Btn>
-                    <Btn className="flex-1" onClick={handleBuyNow}>
-                      Beli Sekarang
-                      <i className="bx bx-right-arrow-alt text-lg"></i>
-                    </Btn>
+                    {isAlreadyPurchased ? (
+                      <Btn
+                        className="flex-1"
+                        variant="outline"
+                        onClick={() => navigate("/my-order")}
+                      >
+                        <i className="bx bx-check-circle text-lg text-green-500"></i>{" "}
+                        Lihat Pesanan
+                      </Btn>
+                    ) : (
+                      <Btn
+                        className="flex-1"
+                        variant="outline"
+                        onClick={handleAddToCart}
+                        disabled={loadingOrders}
+                      >
+                        <i className="bx bx-cart-add text-lg"></i>
+                        {loadingOrders ? "Memuat..." : "Keranjang"}
+                      </Btn>
+                    )}
+                    {isAlreadyPurchased ? (
+                      <Btn
+                        className="flex-1 opacity-50 cursor-not-allowed"
+                        disabled
+                      >
+                        Sudah Dimiliki
+                        <i className="bx bx-check text-lg"></i>
+                      </Btn>
+                    ) : (
+                      <Btn
+                        className="flex-1"
+                        onClick={handleBuyNow}
+                        disabled={loadingOrders}
+                      >
+                        {loadingOrders ? "Memuat..." : "Beli Sekarang"}
+                        <i className="bx bx-right-arrow-alt text-lg"></i>
+                      </Btn>
+                    )}
                   </div>
                 </div>
               </div>

@@ -31,10 +31,7 @@ const CheckoutPage = () => {
   const [discount, setDiscount] = useState(0);
 
   const hargaProduct = useMemo(() => {
-    return selectedProducts.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0
-    );
+    return selectedProducts.reduce((total, item) => total + item.price, 0);
   }, [selectedProducts]);
 
   const totalHarga = useMemo(() => {
@@ -63,14 +60,22 @@ const CheckoutPage = () => {
 
   // Voucher application
   const handleApplyVoucher = async () => {
-    if (!voucherCode) {
-      Swal.fire("Error", "Masukkan kode voucher!", "error");
-      return;
-    }
+    const token = localStorage.getItem("token");
+
+    // if (!voucherCode) {
+    //   Swal.fire("Error", "Masukkan kode voucher!", "error");
+    //   return;
+    // }
 
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_APP_API_URL}/api/vouchers/${voucherCode}`
+        `${import.meta.env.VITE_APP_API_URL}/api/vouchers/${voucherCode}`, // URL endpoint
+        {
+          // Argumen kedua sekarang adalah object konfigurasi
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (response.data.valid) {

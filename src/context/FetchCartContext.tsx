@@ -3,8 +3,7 @@ import type { CartItem } from "./CartContext";
 
 export interface CartContextType {
   cart: CartItem[];
-  addToCart: (productId: number, quantity: number) => void;
-  decreaseQuantity: (productId: number, quantity: number) => void;
+  addToCart: (productId: number) => void;
   removeFromCart: (cartId: number) => void;
   fetchCart: () => void;
   clearCheckedOutItems: (selectedProducts: CartItem[]) => void;

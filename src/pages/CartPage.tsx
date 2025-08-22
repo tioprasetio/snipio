@@ -10,7 +10,7 @@ import { useCart } from "../hook/useCart";
 
 const CartPage = () => {
   const { isDarkMode } = useDarkMode();
-  const { cart, addToCart, decreaseQuantity, removeFromCart, fetchCart } =
+  const { cart, removeFromCart, fetchCart } =
     useCart(); // Gunakan fungsi dari useCart
   const [selectedItems, setSelectedItems] = useState<number[]>([]); // Simpan item yang dicentang
   const { setSelectedProducts } = useCheckout(); // Ambil function dari context
@@ -34,10 +34,10 @@ const CartPage = () => {
   };
 
   // Fungsi untuk mengurangi quantity
-  const handleDecreaseQuantity = async (id: number, productId: number) => {
+  const handleDecreaseQuantity = async (id: number) => {
     const item = cart.find((item) => item.id === id);
 
-    if (item && item.quantity === 1) {
+    if (item) {
       Swal.fire({
         title: "Hapus Produk?",
         text: "Ingin menghapus produk dari keranjang?",
@@ -58,33 +58,15 @@ const CartPage = () => {
           );
         }
       });
-    } else {
-      await decreaseQuantity(productId, 1); // Kurangi quantity
-      await fetchCart(); // Refresh data keranjang
     }
-  };
-
-  // Fungsi untuk menambah quantity
-  const handleIncreaseQuantity = async (productId: number) => {
-    // Cari data produk dari cart
-    const product = cart.find((item) => item.product_id === productId);
-
-    if (!product) {
-      console.error("Produk tidak ditemukan di keranjang");
-      return;
-    }
-
-    // Jika valid, tambahkan quantity
-    await addToCart(productId, 1);
-    await fetchCart();
   };
 
   // Hitung total harga dari item yang dipilih
   const totalHarga = cart
     .filter((item) => selectedItems.includes(item.id))
-    .reduce((total, item) => total + item.price * item.quantity, 0);
+    .reduce((total, item) => total + item.price, 0);
 
-  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const totalItems = cart.length;
 
   const handleCheckout = () => {
     const selectedItemsData = cart.filter((item) =>
@@ -188,30 +170,16 @@ const CartPage = () => {
                     >
                       {item.title}
                     </a>
-
-                    <a className="inline-block font-semibold" href="#">
-                      {formatRupiah(item.price * item.quantity)}
-                    </a>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() =>
-                        handleDecreaseQuantity(item.id, item.product_id)
+                        handleDecreaseQuantity(item.id)
                       }
                       className="text-gray-400 dark:text-gray-300 cursor-pointer"
                     >
                       <i className="bx bx-minus-circle text-2xl"></i>
-                    </button>
-                    <span className="text-base font-semibold text-center w-6">
-                      {item.quantity}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleIncreaseQuantity(item.product_id)}
-                      className="text-gray-400 dark:text-gray-300 cursor-pointer"
-                    >
-                      <i className="bx bx-plus-circle text-2xl"></i>
                     </button>
                   </div>
                 </div>

@@ -20,7 +20,7 @@ const Navbar = () => {
     });
   }, []);
 
-  const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const totalItems = cart.length;
 
   // Cek login saat komponen dimuat
   useEffect(() => {
@@ -176,20 +176,22 @@ const Navbar = () => {
                 Tentang Kami
               </Link>
             </li>
-
-            <li>
-              <Link
-                to="/voucher"
-                className={`${
-                  isDarkMode
-                    ? "text-[#f0f0f0] bg-gray-900"
-                    : "text-[#140c00] bg-white"
-                } block py-2 px-3 hover:text-white hover:bg-[#456af8] rounded-sm text-sm`}
-                aria-current="page"
-              >
-                Voucher
-              </Link>
-            </li>
+            
+            {isLoggedIn && (
+              <li>
+                <Link
+                  to="/voucher"
+                  className={`${
+                    isDarkMode
+                      ? "text-[#f0f0f0] bg-gray-900"
+                      : "text-[#140c00] bg-white"
+                  } block py-2 px-3 hover:text-white hover:bg-[#456af8] rounded-sm text-sm`}
+                  aria-current="page"
+                >
+                  Voucher
+                </Link>
+              </li>
+            )}
 
             {/* Cart Button */}
             <li>

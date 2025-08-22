@@ -5,9 +5,11 @@ import axios from "axios";
 import { formatRupiah } from "../utils/formatCurrency";
 import { useCart } from "../hook/useCart";
 import { useCheckout } from "../hook/useCheckout";
+import { useDarkMode } from "../context/DarkMode";
 
 const PaymentCallbackPage = () => {
   const location = useLocation();
+  const { isDarkMode } = useDarkMode();
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const { clearCheckedOutItems } = useCart();
@@ -97,14 +99,30 @@ const PaymentCallbackPage = () => {
   };
 
   return (
-    <div className="p-4 min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+    <div
+      className={`${
+        isDarkMode ? "bg-gray-900" : "bg-gray-100"
+      } p-4 min-h-screen flex items-center justify-center `}
+    >
+      <div
+        className={`${
+          isDarkMode ? "bg-gray-800" : "bg-white"
+        } p-8 rounded-lg shadow-lg text-center`}
+      >
         {status === "success" && transactionDetails ? (
-          <>
-            <h1 className="text-2xl font-bold text-green-600 mb-4">
+          <div className={`${isDarkMode ? "text-gray-100" : "text-gray-700"}`}>
+            <div className="flex justify-center mb-4">
+              <img
+                src="/assets/images/check.png"
+                className="h-32 w-auto"
+                alt="snipio"
+                loading="lazy"
+              />
+            </div>
+            <h1 className="text-2xl font-bold text-green-500 mb-4">
               Pembayaran Berhasil!
             </h1>
-            <p className="text-gray-700">
+            <p>
               Terima kasih <strong>{transactionDetails.receiver_name}!</strong>{" "}
               Anda telah melakukan pembayaran sebesar{" "}
               <span className="font-semibold">
@@ -112,22 +130,20 @@ const PaymentCallbackPage = () => {
               </span>
               .
             </p>
-            <p className="text-gray-700 mt-2">
-              Order ID: {transactionDetails.order_id}
-            </p>
+            <p className="mt-4">Order ID: {transactionDetails.order_id}</p>
             <button
               onClick={handleSelesai}
-              className="mt-6 bg-[#28a154] text-white px-6 py-2 rounded-lg hover:bg-[#167e3c] cursor-pointer"
+              className="mt-6 bg-[#456af8] text-white px-6 py-2 rounded-lg hover:bg-[#304ebe] cursor-pointer"
             >
               Kembali ke Beranda
             </button>
-          </>
+          </div>
         ) : status === "failed" ? (
-          <>
+          <div className={`${isDarkMode ? "text-gray-100" : "text-gray-700"}`}>
             <h1 className="text-2xl font-bold text-red-600 mb-4">
               Pembayaran Gagal
             </h1>
-            <p className="text-gray-700">
+            <p>
               Maaf, pembayaran Anda gagal. Silakan coba lagi atau hubungi tim
               support.
             </p>
@@ -137,14 +153,14 @@ const PaymentCallbackPage = () => {
             >
               Coba Lagi
             </button>
-          </>
+          </div>
         ) : (
-          <>
+          <div className={`${isDarkMode ? "text-gray-100" : "text-gray-700"}`}>
             <h1 className="text-2xl font-bold text-gray-600 mb-4">
               Memproses Pembayaran...
             </h1>
-            <p className="text-gray-700">Silakan tunggu sebentar.</p>
-          </>
+            <p>Silakan tunggu sebentar.</p>
+          </div>
         )}
       </div>
     </div>

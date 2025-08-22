@@ -14,7 +14,6 @@ export interface CartItem {
   title: string;
   price: number;
   thumbnail: string;
-  quantity: number;
 }
 
 export const CartProvider = ({ children }: { children: React.ReactNode }) => {
@@ -47,7 +46,6 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
 
   const addToCart = async (
     productId: number,
-    quantity: number,
   ) => {
     if (!userEmail) {
       console.error("User email not found in token");
@@ -58,29 +56,10 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       await axios.post(`${import.meta.env.VITE_APP_API_URL}/api/cart`, {
         user_email: userEmail,
         product_id: productId,
-        quantity,
       });
       fetchCart(); // Refresh data keranjang
     } catch (error) {
       console.error("Error adding to cart:", error);
-    }
-  };
-
-  const decreaseQuantity = async (productId: number, quantity: number) => {
-    if (!userEmail) {
-      console.error("User email not found in token");
-      return;
-    }
-
-    try {
-      await axios.put(`${import.meta.env.VITE_APP_API_URL}/api/cart/decrease`, {
-        user_email: userEmail,
-        product_id: productId,
-        quantity,
-      });
-      fetchCart(); // Refresh data keranjang
-    } catch (error) {
-      console.error("Error decreasing quantity:", error);
     }
   };
 
@@ -133,7 +112,6 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         cart,
         addToCart,
-        decreaseQuantity,
         removeFromCart,
         fetchCart,
         clearCheckedOutItems,

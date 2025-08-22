@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import axios from "axios";
 import type { Voucher } from "../types/Voucher";
@@ -9,14 +10,23 @@ const useVouchers = () => {
 
   useEffect(() => {
     const fetchVouchers = async () => {
+      const token = localStorage.getItem("token");
       try {
         const response = await axios.get<Voucher[]>(
-          `${import.meta.env.VITE_APP_API_URL}/api/vouchers`
+          `${import.meta.env.VITE_APP_API_URL}/api/vouchers`,
+          {
+            // Argumen kedua sekarang adalah object konfigurasi
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         setVouchers(response.data);
-      } catch (error) {
-        console.error("Error fetching vouchers:", error);
-        setError("Gagal memuat voucher");
+      } catch (error: any) {
+        const message =
+          error.response?.data?.message ||
+          "Terjadi kesalahan saat memeriksa voucher!";
+        setError(message);
       } finally {
         setLoading(false);
       }
